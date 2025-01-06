@@ -1,6 +1,5 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -42,6 +41,16 @@ class MyAppState extends ChangeNotifier {
     } else {
       favorites.add(current);
     }
+    notifyListeners();
+  }
+
+  void cleanFavorites() {
+    favorites.clear();
+    notifyListeners();
+  }
+
+  void removeFavorite(WordPair pair) {
+    favorites.remove(pair);
     notifyListeners();
   }
 }
@@ -192,19 +201,51 @@ class FavoritesPage extends StatelessWidget {
       );
     }
 
-    return ListView(
-      children: [
+    return Column(
+      children: <Widget>[
         Padding(
           padding: const EdgeInsets.all(20),
           child: Text('You have '
               '${appState.favorites.length} favorites:'),
         ),
-        for (var pair in appState.favorites)
-          ListTile(
-            leading: Icon(Icons.favorite),
-            title: Text(pair.asLowerCase),
+        Expanded(
+          child: Wrap(
+            spacing: 8.0,
+            runSpacing: 4.0,
+            children: <Widget>[
+              for (var pair in appState.favorites) FavoriteItem(pair: pair),
+            ],
           ),
+        ),
+        ElevatedButton(
+            onPressed: () {
+              appState.cleanFavorites();
+            },
+            child: Text('Clear favorites')),
       ],
+    );
+  }
+}
+
+class FavoriteItem extends StatelessWidget {
+  const FavoriteItem({
+    super.key,
+    required this.pair,
+  });
+
+  final WordPair pair;
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
+    return ListTile(
+      leading: FilledButton(
+          onPressed: () {
+            appState.removeFavorite(pair);
+          },
+          child: Icon(Icons.delete_outline)),
+      title: Text(pair.asLowerCase),
     );
   }
 }
